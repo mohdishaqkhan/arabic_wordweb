@@ -180,58 +180,58 @@ f<!DOCTYPE html>
                                 Ensure the output is a JSON object with keys: \`root_word\` (string), \`root_word_english\` (string), \`synonyms\` (array of objects with 'arabic' and 'english' keys), \`antonyms\` (array of objects with 'arabic' and 'english' keys), \`example_sentences\` (array of objects with 'arabic' and 'english' keys), \`derivations\` (array of objects with 'arabic' and 'english' keys), and \`cultural_notes\` (string).
                                 If no synonyms, antonyms, or derivations are found, provide an empty array for that field. If no specific cultural notes are relevant, provide an empty string.`;
 
-                                const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                                // const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
 
-                                const payload = {
-                                    contents: chatHistory,
-                                    generationConfig: {
-                                        responseMimeType: "application/json",
-                                        responseSchema: {
-                                            type: "OBJECT",
-                                            properties: {
-                                                root_word: { "type": "STRING" },
-                                                root_word_english: { "type": "STRING" },
-                                                synonyms: {
-                                                    "type": "ARRAY",
-                                                    "items": {
-                                                        "type": "OBJECT",
-                                                        "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
-                                                        "required": ["arabic", "english"]
-                                                    }
-                                                },
-                                                antonyms: {
-                                                    "type": "ARRAY",
-                                                    "items": {
-                                                        "type": "OBJECT",
-                                                        "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
-                                                        "required": ["arabic", "english"]
-                                                    }
-                                                },
-                                                example_sentences: {
-                                                    "type": "ARRAY",
-                                                    "items": {
-                                                        "type": "OBJECT",
-                                                        "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
-                                                        "required": ["arabic", "english"]
-                                                    }
-                                                },
-                                                derivations: {
-                                                    "type": "ARRAY",
-                                                    "items": {
-                                                        "type": "OBJECT",
-                                                        "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
-                                                        "required": ["arabic", "english"]
-                                                    }
-                                                },
-                                                cultural_notes: { "type": "STRING" }
-                                            },
-                                            required: ["root_word", "root_word_english", "synonyms", "antonyms", "example_sentences", "derivations", "cultural_notes"]
-                                        }
-                                    }
-                                };
+                                // const payload = {
+                                //     contents: chatHistory,
+                                //     generationConfig: {
+                                //         responseMimeType: "application/json",
+                                //         responseSchema: {
+                                //             type: "OBJECT",
+                                //             properties: {
+                                //                 root_word: { "type": "STRING" },
+                                //                 root_word_english: { "type": "STRING" },
+                                //                 synonyms: {
+                                //                     "type": "ARRAY",
+                                //                     "items": {
+                                //                         "type": "OBJECT",
+                                //                         "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
+                                //                         "required": ["arabic", "english"]
+                                //                     }
+                                //                 },
+                                //                 antonyms: {
+                                //                     "type": "ARRAY",
+                                //                     "items": {
+                                //                         "type": "OBJECT",
+                                //                         "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
+                                //                         "required": ["arabic", "english"]
+                                //                     }
+                                //                 },
+                                //                 example_sentences: {
+                                //                     "type": "ARRAY",
+                                //                     "items": {
+                                //                         "type": "OBJECT",
+                                //                         "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
+                                //                         "required": ["arabic", "english"]
+                                //                     }
+                                //                 },
+                                //                 derivations: {
+                                //                     "type": "ARRAY",
+                                //                     "items": {
+                                //                         "type": "OBJECT",
+                                //                         "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
+                                //                         "required": ["arabic", "english"]
+                                //                     }
+                                //                 },
+                                //                 cultural_notes: { "type": "STRING" }
+                                //             },
+                                //             required: ["root_word", "root_word_english", "synonyms", "antonyms", "example_sentences", "derivations", "cultural_notes"]
+                                //         }
+                                //     }
+                                // };
 
-                                const apiKey = "AIzaSyDgKgG3__XCgA9d1tkaIa-oM1aCPT_eShE"; // Canvas will provide at runtime
-                                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                                // const apiKey = "AIzaSyDgKgG3__XCgA9d1tkaIa-oM1aCPT_eShE"; // Canvas will provide at runtime
+                                // const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                                 const response = await fetch(apiUrl, {
                                     method: 'POST',
@@ -487,6 +487,7 @@ f<!DOCTYPE html>
     </script>
 </body>
 </html>
+
 
 
 
