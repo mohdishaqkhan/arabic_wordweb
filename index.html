@@ -232,47 +232,93 @@ f<!DOCTYPE html>
 
                                 // const apiKey = "AIzaSyDgKgG3__XCgA9d1tkaIa-oM1aCPT_eShE"; // Canvas will provide at runtime
                                 // const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                                const response = await fetch(apiUrl, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(payload)
-                                });
-
-                                if (!response.ok) {
-                                    const errorData = await response.json();
-                                    throw new Error(`API error: ${errorData.error?.message || response.statusText}`);
-                                }
-
-                                const result = await response.json();
-
-                                if (result.candidates && result.candidates.length > 0 &&
-                                    result.candidates[0].content && result.candidates[0].content.parts &&
-                                    result.candidates[0].content.parts.length > 0) {
-                                    const jsonString = result.candidates[0].content.parts[0].text;
-                                    const parsedData = JSON.parse(jsonString);
-
-                                    if (parsedData.root_word !== undefined &&
-                                        parsedData.root_word_english !== undefined &&
-                                        Array.isArray(parsedData.synonyms) &&
-                                        Array.isArray(parsedData.antonyms) &&
-                                        Array.isArray(parsedData.example_sentences) &&
-                                        Array.isArray(parsedData.derivations) &&
-                                        typeof parsedData.cultural_notes === 'string') {
-                                        setWordData(parsedData);
-                                    } else {
-                                        throw new Error("Unexpected data structure from API. Response might be incomplete or malformed.");
+                                    const fetchArabicWordData = React.useCallback(async () => {
+                                    if (!arabicWord.trim()) {
+                                        setError('Please enter an Arabic word.');
+                                        setWordData(null);
+                                        return;
                                     }
-                                } else {
-                                    throw new Error("No content received from the API. The model might not have generated a response.");
-                                }
-                            } catch (e) {
-                                console.error("Error fetching data:", e);
-                                setError(`Failed to fetch data: ${e.message}. Please try a different word or try again later.`);
-                            } finally {
-                                setLoading(false);
-                            }
-                        }, [arabicWord]); // Re-run useCallback if arabicWord changes
+                                
+                                    setLoading(true);
+                                    setError('');
+                                    setWordData(null);
+                                
+                                    // This is the prompt. Keep this part as it's correctly formatted.
+                                    const prompt = `For the Arabic word '${arabicWord.trim()}', provide its root word and its English translation, a list of up to 5 synonyms with their English translations (if they are close enough in meaning), a list of up to 3 antonyms with their English translations (if they are opposite enough in meaning), three distinct example sentences using the word, each with its English translation.
+                                    Additionally, provide up to 3 common derived forms or verb conjugations of the word with their English translations, and a brief paragraph (1-3 sentences) on its cultural context or specific usage nuances.
+                                    Ensure the output is a JSON object with keys: \`root_word\` (string), \`root_word_english\` (string), \`synonyms\` (array of objects with 'arabic' and 'english' keys), \`antonyms\` (array of objects with 'arabic' and 'english' keys), \`example_sentences\` (array of objects with 'arabic' and 'english' keys), \`derivations\` (array of objects with 'arabic' and 'english' keys), and \`cultural_notes\` (string).
+                                    If no synonyms, antonyms, or derivations are found, provide an empty array for that field. If no specific cultural notes are relevant, provide an empty string.`;
+                                
+                                    // ------------------------------------------------------------------
+                                    // THIS IS THE PART YOU NEED TO REPLACE
+                                    // ------------------------------------------------------------------
+                                    try {
+                                        // This is the new, secure fetch call to your backend
+                                        const yourBackendUrl = '/api/data';
+                                
+                                        const response = await fetch(yourBackendUrl, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ prompt: prompt }),
+                                        });
+                                
+                                        if (!response.ok) {
+                                            const errorData = await response.json();
+                                            throw new Error(`Server error: ${errorData.error || response.statusText}`);
+                                        }
+                                
+                                        const parsedData = await response.json();
+                                        setWordData(parsedData);
+                                        
+                                    } catch (e) {
+                                        console.error("Error fetching data:", e);
+                                        setError(`Failed to fetch data: ${e.message}. Please try a different word or try again later.`);
+                                    } finally {
+                                        setLoading(false);
+                                    }
+                                }, [arabicWord]);
+                        //         const response = await fetch(apiUrl, {
+                        //             method: 'POST',
+                        //             headers: { 'Content-Type': 'application/json' },
+                        //             body: JSON.stringify(payload)
+                        //         });
+
+                        //         if (!response.ok) {
+                        //             const errorData = await response.json();
+                        //             throw new Error(`API error: ${errorData.error?.message || response.statusText}`);
+                        //         }
+
+                        //         const result = await response.json();
+
+                        //         if (result.candidates && result.candidates.length > 0 &&
+                        //             result.candidates[0].content && result.candidates[0].content.parts &&
+                        //             result.candidates[0].content.parts.length > 0) {
+                        //             const jsonString = result.candidates[0].content.parts[0].text;
+                        //             const parsedData = JSON.parse(jsonString);
+
+                        //             if (parsedData.root_word !== undefined &&
+                        //                 parsedData.root_word_english !== undefined &&
+                        //                 Array.isArray(parsedData.synonyms) &&
+                        //                 Array.isArray(parsedData.antonyms) &&
+                        //                 Array.isArray(parsedData.example_sentences) &&
+                        //                 Array.isArray(parsedData.derivations) &&
+                        //                 typeof parsedData.cultural_notes === 'string') {
+                        //                 setWordData(parsedData);
+                        //             } else {
+                        //                 throw new Error("Unexpected data structure from API. Response might be incomplete or malformed.");
+                        //             }
+                        //         } else {
+                        //             throw new Error("No content received from the API. The model might not have generated a response.");
+                        //         }
+                        //     } catch (e) {
+                        //         console.error("Error fetching data:", e);
+                        //         setError(`Failed to fetch data: ${e.message}. Please try a different word or try again later.`);
+                        //     } finally {
+                        //         setLoading(false);
+                        //     }
+                        // }, [arabicWord]); // Re-run useCallback if arabicWord changes
 
                         // Callback for handling Enter key press in the input field
                         const handleKeyPress = React.useCallback((event) => {
@@ -487,6 +533,7 @@ f<!DOCTYPE html>
     </script>
 </body>
 </html>
+
 
 
 
