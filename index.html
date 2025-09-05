@@ -4,16 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arabic WordWeb</title>
-
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Inter font from Google Fonts for better typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- FontAwesome for the search icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -21,107 +15,129 @@
             padding: 0;
             background-color: #f0f4f8;
         }
-
-        /* Styles for the loading animation */
+        /* Responsive container for main content */
+        .main-container {
+            width: 100%;
+            max-width: 800px;
+            padding: 1.5rem;
+        }
+        /* Basic card styling */
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        /* Loader styles */
         .loader {
-            border: 4px solid rgba(0, 0, 0, 0.1);
+            border: 4px solid rgba(0,0,0,0.1);
             border-left-color: #3b82f6;
             border-radius: 50%;
             width: 2rem;
             height: 2rem;
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body>
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-8 font-sans flex flex-col items-center justify-center">
-        <div class="bg-white rounded-xl shadow-2xl p-6 sm:p-10 w-full max-w-2xl transform transition-all duration-300 hover:scale-[1.01]">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mb-2">Arabic WordWeb</h1>
-            <p class="text-center text-gray-600 mb-6 sm:mb-8 text-md sm:text-lg">
-                Explore the meanings and roots of Arabic words.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 mb-6">
-                <input
-                    id="arabic-input"
-                    type="text"
-                    placeholder="اكتب كلمة عربية..."
-                    class="flex-1 px-5 py-3 border-2 border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-lg pr-12 transition-all duration-300"
-                    dir="rtl"
-                    lang="ar"
-                />
-                <button
-                    id="search-button"
-                    class="bg-blue-600 text-white rounded-full p-3 sm:px-6 sm:py-3 hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-md transform active:scale-95"
-                >
-                    <i class="fas fa-search"></i>
-                    <span class="hidden sm:inline ml-2">Search</span>
-                </button>
-            </div>
-            <div id="loading-container" class="flex justify-center items-center h-20" style="display: none;">
-                <div class="loader"></div>
-            </div>
-            <div id="error-container" class="mt-4"></div>
-            <div id="results-container" class="mt-8"></div>
-        </div>
-    </div>
-
-    <!-- The main application script -->
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div id="app-container" class="main-container"></div>
     <script type="module">
-        const appContainer = document.querySelector('.min-h-screen');
-        const searchInput = document.getElementById('arabic-input');
-        const searchButton = document.getElementById('search-button');
-        const resultsContainer = document.getElementById('results-container');
-        const loadingContainer = document.getElementById('loading-container');
-        const errorContainer = document.getElementById('error-container');
+        // State for UI
+        const state = {
+            loading: false,
+            error: null,
+            content: null,
+        };
+        const appContainer = document.getElementById('app-container');
 
-        // IMPORTANT: Replace this with your actual API key.
-        const API_KEY = "YOUR_API_KEY_HERE";
+        function render() {
+            if (state.error) {
+                appContainer.innerHTML = `
+                    <div class="card p-8 text-center text-red-500">
+                        <h2 class="text-2xl font-bold mb-4">Error</h2>
+                        <p class="text-md">${state.error}</p>
+                    </div>
+                `;
+            } else if (state.loading) {
+                appContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-64">
+                        <div class="loader"></div>
+                        <p class="mt-4 text-gray-600">Loading...</p>
+                    </div>
+                `;
+            } else {
+                appContainer.innerHTML = `
+                    <div class="card">
+                        <div class="flex flex-col items-center">
+                            <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-6">Arabic WordWeb</h1>
+                            <p class="text-center text-gray-600 mb-8">
+                                Enter an Arabic word below to find its root, translation, and more.
+                            </p>
+                            <div class="w-full relative">
+                                <input
+                                    id="arabic-input"
+                                    type="text"
+                                    placeholder="اكتب كلمة عربية..."
+                                    class="w-full px-5 py-3 border-2 border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-lg pr-12"
+                                    dir="rtl"
+                                    lang="ar"
+                                />
+                                <button id="search-button" class="absolute inset-y-0 left-0 flex items-center pl-3 pr-2 rounded-full">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="results-container" class="mt-8">
+                            ${state.content ? formatResults(state.content) : ''}
+                        </div>
+                    </div>
+                `;
 
-        // Function to format the JSON data into HTML
-        function formatResults(data, arabicWord) {
+                // Event listeners for search
+                const searchButton = document.getElementById('search-button');
+                const arabicInput = document.getElementById('arabic-input');
+                searchButton.addEventListener('click', handleSearch);
+                arabicInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') handleSearch();
+                });
+            }
+        }
+
+        function formatResults(data) {
             if (!data) return '';
             const { root_word, root_word_english, synonyms, antonyms, example_sentences, derivations, cultural_notes } = data;
 
             return `
-                <div class="mb-6">
-                    <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-700 text-center mb-4">
-                        Results for <span class="text-blue-600">${arabicWord}</span>
-                    </h2>
-                    <hr class="border-t-2 border-blue-200 w-20 mx-auto" />
-                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-800">
-                    <div class="p-4 bg-gray-50 rounded-lg shadow-inner">
+                    <div>
                         <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Root Word</h3>
                         <div class="text-lg">
-                            <p class="mb-1"><span class="font-semibold text-gray-600">Arabic:</span> ${root_word}</p>
-                            <p><span class="font-semibold text-gray-600">English:</span> ${root_word_english}</p>
+                            <p class="mb-1"><span class="font-semibold">Arabic:</span> ${root_word}</p>
+                            <p><span class="font-semibold">English:</span> ${root_word_english}</p>
                         </div>
                     </div>
                     ${synonyms && synonyms.length > 0 ? `
-                    <div class="p-4 bg-gray-50 rounded-lg shadow-inner">
+                    <div>
                         <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Synonyms</h3>
-                        <ul class="list-disc list-inside space-y-1">
+                        <ul class="list-disc list-inside">
                             ${synonyms.map(s => `<li>${s.arabic} <span class="text-gray-500">(${s.english})</span></li>`).join('')}
                         </ul>
                     </div>
                     ` : ''}
                     ${antonyms && antonyms.length > 0 ? `
-                    <div class="p-4 bg-gray-50 rounded-lg shadow-inner">
+                    <div>
                         <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Antonyms</h3>
-                        <ul class="list-disc list-inside space-y-1">
+                        <ul class="list-disc list-inside">
                             ${antonyms.map(a => `<li>${a.arabic} <span class="text-gray-500">(${a.english})</span></li>`).join('')}
                         </ul>
                     </div>
                     ` : ''}
                 </div>
                 ${example_sentences && example_sentences.length > 0 ? `
-                <div class="mt-8 p-4 bg-gray-50 rounded-lg shadow-inner">
+                <div class="mt-8">
                     <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Example Sentences</h3>
                     <div class="space-y-4">
                         ${example_sentences.map(e => `
@@ -134,15 +150,15 @@
                 </div>
                 ` : ''}
                 ${derivations && derivations.length > 0 ? `
-                <div class="mt-8 p-4 bg-gray-50 rounded-lg shadow-inner">
+                <div class="mt-8">
                     <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Derived Forms</h3>
-                    <ul class="list-disc list-inside space-y-1">
+                    <ul class="list-disc list-inside">
                         ${derivations.map(d => `<li>${d.arabic} <span class="text-gray-500">(${d.english})</span></li>`).join('')}
-                        </ul>
-                    </div>
-                    ` : ''}
+                    </ul>
+                </div>
+                ` : ''}
                 ${cultural_notes ? `
-                <div class="mt-8 p-4 bg-gray-50 rounded-lg shadow-inner">
+                <div class="mt-8">
                     <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Cultural Notes</h3>
                     <p class="text-gray-700 leading-relaxed">${cultural_notes}</p>
                 </div>
@@ -150,77 +166,50 @@
             `;
         }
 
-        // Function to handle the search logic and API call
         async function handleSearch() {
-            const arabicWord = searchInput.value;
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-
+            const arabicWord = document.getElementById('arabic-input').value;
             if (!arabicWord) {
-                errorContainer.innerHTML = `
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
-                        <strong class="font-bold">Error: </strong>
-                        <span class="block sm:inline">Please enter an Arabic word to search.</span>
-                    </div>
-                `;
-                resultsContainer.innerHTML = "";
+                state.error = "Please enter an Arabic word to search.";
+                state.content = null;
+                render();
                 return;
             }
 
-            // Show loading state and clear previous content
-            loadingContainer.style.display = 'flex';
-            errorContainer.innerHTML = "";
-            resultsContainer.innerHTML = "";
+            state.loading = true;
+            state.content = null;
+            state.error = null;
+            render();
 
             try {
                 const prompt = `For the Arabic word '${arabicWord.trim()}', provide its root word and its English translation, a list of up to 5 synonyms with their English translations (if they are close enough in meaning), a list of up to 3 antonyms with their English translations (if they are opposite enough in meaning), three distinct example sentences using the word, each with its English translation.
                 Additionally, provide up to 3 common derived forms or verb conjugations of the word with their English translations, and a brief paragraph (1-3 sentences) on its cultural context or specific usage nuances.
                 Ensure the output is a JSON object with keys: \`root_word\` (string), \`root_word_english\` (string), \`synonyms\` (array of objects with 'arabic' and 'english' keys), \`antonyms\` (array of objects with 'arabic' and 'english' keys), \`example_sentences\` (array of objects with 'arabic' and 'english' keys), \`derivations\` (array of objects with 'arabic' and 'english' keys), and \`cultural_notes\` (string).`;
 
-                const payload = {
-                    "contents": [{ "parts": [{ "text": prompt }] }],
-                    "generationConfig": {
-                        "responseMimeType": "application/json"
-                    }
-                };
-
-                const response = await fetch(url, {
+                const response = await fetch('/api/data', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt }),
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.error || 'API responded with an error.');
+                    throw new Error(errorData.error || 'Server responded with an error.');
                 }
 
-                const geminiResponseData = await response.json();
-                const generatedContent = geminiResponseData.candidates[0].content.parts[0].text;
-                const data = JSON.parse(generatedContent);
-
-                resultsContainer.innerHTML = formatResults(data, arabicWord);
-
+                const data = await response.json();
+                state.content = data;
             } catch (error) {
-                console.error("Fetch error:", error);
-                errorContainer.innerHTML = `
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
-                        <strong class="font-bold">Error: </strong>
-                        <span class="block sm:inline">Could not get data. Please check the word and try again. Error: ${error.message}</span>
-                    </div>
-                `;
+                state.error = `Could not get data. Please check the word and try again. Error: ${error.message}`;
             } finally {
-                loadingContainer.style.display = 'none';
+                state.loading = false;
+                render();
             }
         }
 
-        searchButton.addEventListener('click', handleSearch);
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                handleSearch();
-            }
-        });
+        // Initial render
+        window.onload = function() {
+            render();
+        };
     </script>
 </body>
 </html>
