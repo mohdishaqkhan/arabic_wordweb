@@ -77,8 +77,8 @@
 
         const appContainer = document.getElementById('app-container');
 
-        // IMPORTANT: Replace this with your actual API key
-        const API_KEY = "YOUR_API_KEY_HERE";
+        // IMPORTANT: Replace this with your actual API key.
+        const API_KEY = "AIzaSyDgKgG3__XCgA9d1tkaIa-oM1aCPT_eShE";
 
         // Function to render the UI based on the current state
         function render() {
@@ -186,9 +186,9 @@
                     <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Derived Forms</h3>
                     <ul class="list-disc list-inside">
                         ${derivations.map(d => `<li>${d.arabic} <span class="text-gray-500">(${d.english})</span></li>`).join('')}
-                    </ul>
-                </div>
-                ` : ''}
+                        </ul>
+                    </div>
+                    ` : ''}
                 ${cultural_notes ? `
                 <div class="mt-8">
                     <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Cultural Notes</h3>
