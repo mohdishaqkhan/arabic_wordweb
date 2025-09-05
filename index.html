@@ -2,16 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Arabic WordWeb (Demo)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arabic WordWeb</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #e8f0fe;
-        }
+        body { font-family: 'Inter', sans-serif; background: #e8f0fe; }
         .gradient-text {
             background: linear-gradient(90deg, #1976d2 35%, #8e24aa 100%);
             -webkit-background-clip: text;
@@ -53,6 +50,31 @@
         </div>
     </div>
     <script>
+        // Sample demo data to match your screenshot and for practice!
+        const demoData = {
+            root_word: "كتب",
+            root_word_english: "to write",
+            synonyms: [
+                { arabic: "دون", english: "to record" },
+                { arabic: "رسم خطًا", english: "to draw a line, to write (especially for calligraphy)" }
+            ],
+            antonyms: [
+                { arabic: "مسح", english: "to erase" }
+            ],
+            example_sentences: [
+                { arabic: "كتب الطالب الواجب.", english: "The student wrote the homework."},
+                { arabic: "أنا أكتب رسالة إلى صديقي.", english: "I am writing a letter to my friend."},
+                { arabic: "كتب الله لكم الخير.", english: "God decreed/wrote goodness for you."}
+            ],
+            derivations: [
+                { arabic: "كتاب", english: "book" },
+                { arabic: "كتبت", english: "I wrote" },
+                { arabic: "@library/bookstore", english: "library/bookstore" }
+            ],
+            cultural_notes:
+                "Writing is incredibly versatile and significant in Arabic ('كتب'). The root is deeply central in meaning for writing and recording, with a rich history in literature, administration, and communication, reflecting the high value placed on written communication and recorded history in Arab and Islamic cultures."
+        };
+
         function formatResults(data, arabicWord) {
             return `
                 ${arabicWord ? `
@@ -123,7 +145,7 @@
             if (e.key === 'Enter') handleSearch();
         });
 
-        async function handleSearch() {
+        function handleSearch() {
             const arabicWord = document.getElementById('arabic-input').value.trim();
             const errorContainer = document.getElementById('error-container');
             const resultsContainer = document.getElementById('results-container');
@@ -140,7 +162,7 @@
                 return;
             }
 
-            // Show loading spinner
+            // Simulate loading
             resultsContainer.innerHTML = `
                 <div class="flex flex-col items-center justify-center h-24">
                     <svg class="animate-spin h-6 w-6 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -151,34 +173,10 @@
                 </div>
             `;
 
-            try {
-                const prompt = `For the Arabic word '${arabicWord}', provide its root word and its English translation, a list of up to 5 synonyms with their English translations (if they are close enough in meaning), a list of up to 3 antonyms with their English translations (if they are opposite enough in meaning), three distinct example sentences using the word, each with its English translation.
-                Additionally, provide up to 3 common derived forms or verb conjugations of the word with their English translations, and a brief paragraph (1-3 sentences) on its cultural context or specific usage nuances.
-                Ensure the output is a JSON object with keys: root_word (string), root_word_english (string), synonyms (array of objects with 'arabic' and 'english' keys), antonyms (array of objects with 'arabic' and 'english' keys), example_sentences (array of objects with 'arabic' and 'english' keys), derivations (array of objects with 'arabic' and 'english' keys), and cultural_notes (string).`;
-
-                const response = await fetch('/api/data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt }),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Server responded with an error.');
-                }
-
-                const data = await response.json();
-                resultsContainer.innerHTML = formatResults(data, arabicWord);
-
-            } catch (error) {
-                errorContainer.innerHTML = `
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-                        <strong class="font-bold">Error: </strong>
-                        <span class="block">Could not get data. Please check the word and try again. Error: ${error.message}</span>
-                    </div>
-                `;
-                resultsContainer.innerHTML = "";
-            }
+            setTimeout(() => {
+                // Show demo result (for practice, always same data)
+                resultsContainer.innerHTML = formatResults(demoData, arabicWord);
+            }, 600);
         }
     </script>
 </body>
