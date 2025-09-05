@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arabic WordWeb</title>
-    <!-- Link to your Web App Manifest for PWA features -->
-    <link rel="manifest" href="./manifest.json">
+
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- Inter font from Google Fonts for better typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <!-- FontAwesome for the search icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
     <style>
         /* Basic styling for the body to ensure full height and centering */
         body {
@@ -22,522 +24,242 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f0f4f8; /* Fallback background color */
-            
+            background-color: #f0f4f8;
         }
-        /* No modal styles needed as we've removed the modal for simplicity */
+
+        /* Responsive layout for the main container */
+        .main-container {
+            width: 100%;
+            max-width: 800px;
+            padding: 1.5rem;
+        }
+
+        /* Basic card styling with shadow and rounded corners */
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        /* Styles for the loading animation */
+        .loader {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
-<body>
-    
-    <!-- This is the root element where your React app will be mounted -->
-    <div id="root"></div>
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pt-8 sm:pt-16 p-4 sm:p-8 font-sans">
-    <div className="bg-white rounded-xl shadow-2xl p-6 sm:p-10 w-full max-w-2xl mx-auto">
-  ...
-</div>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-    <!-- React and ReactDOM libraries loaded from CDNs -->
-    <!-- These are production versions for better performance -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel Standalone for JSX transformation in the browser.
-         This is convenient for single-file HTML apps but not recommended for large projects. -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <div id="app-container" class="main-container">
+        <!-- The main application content will be rendered here -->
+    </div>
 
-    <!-- Firebase libraries loaded from CDNs (UMD versions for global access) -->
-    <!-- THESE ARE THE CORRECTED UMD LINKS FOR FIREBASE -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- The main application script -->
+    <script type="module">
+        // A simple state object to manage the application's UI
+        const state = {
+            loading: false,
+            initialLoad: true,
+            error: null,
+            content: null,
+        };
 
+        const appContainer = document.getElementById('app-container');
 
-    <!-- The main React App component and rendering logic -->
-    <!-- The type="text/babel" attribute is crucial for Babel to transform JSX -->
-    <!-- This script runs AFTER all necessary libraries are loaded -->
-<!--         THE BELOW IS IN THE WAY  -->
-    <script type='text/javascript' src='config.js'></script>
-    <script type="text/babel">
-        // Ensure the entire React application is run only after all external scripts are loaded
-        window.onload = function() {
-            let retryCount = 0;
-            const maxRetries = 200; // Max 200 retries * 50ms = 10 seconds wait time
+        // IMPORTANT: Replace this with your actual API key
+        const API_KEY = "YOUR_API_KEY_HERE";
 
-            // Function to continuously check if all required libraries are loaded
-            const checkAndRunApp = () => {
-                // Check for React, ReactDOM, and Firebase's main object and its sub-modules
-                const isReactLoaded = typeof window.React !== 'undefined';
-                const isReactDOMLoaded = typeof window.ReactDOM !== 'undefined';
-                const isFirebaseAppLoaded = typeof window.firebase !== 'undefined';
-                // Now checking for firebase.auth and firebase.firestore on the global firebase object
-                const isFirebaseAuthLoaded = typeof window.firebase?.auth !== 'undefined';
-                const isFirestoreLoaded = typeof window.firebase?.firestore !== 'undefined';
-
-                if (isReactLoaded && isReactDOMLoaded && isFirebaseAppLoaded && isFirebaseAuthLoaded && isFirestoreLoaded) {
-                    
-                    console.log("All necessary libraries (Firebase, React, ReactDOM) are loaded. Proceeding to initialize App.");
-
-                    // Access Firebase functions directly from the globally available 'firebase' object.
-                    // Note: With compat versions, initializeApp, getAuth, getFirestore are directly on firebase.
-                    const initializeApp = firebase.initializeApp;
-                    const getAuth = firebase.auth; // firebase.auth() returns the auth instance
-                    const getFirestore = firebase.firestore; // firebase.firestore() returns the firestore instance
-
-                    // Define global variables for Firebase configuration.
-                    // IMPORTANT: For local use outside of the Canvas environment, you MUST replace
-                    // these placeholder values with your actual Firebase project's configuration
-                    // and a valid Gemini API Key from Google AI Studio.
-                    // Example of how you would define them if running locally:
-                    /*
-                    const __app_id = "your-firebase-app-id-here"; // e.g., "my-arabic-app-12345"
-                    const __firebase_config = JSON.stringify({
-                        apiKey: "YOUR_FIREBASE_API_KEY",
-                        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-                        projectId: "YOUR_PROJECT_ID",
-                        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-                        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-                        appId: "YOUR_FIREBASE_APP_ID"
-                    });
-                    const __initial_auth_token = null; // Leave as null for anonymous sign-in, or provide a custom token if applicable
-                    */
-
-                    const App = () => {
-                        // State variables to manage the application's data and UI
-                        const [arabicWord, setArabicWord] = React.useState(''); // Stores the user's input Arabic word
-                        const [wordData, setWordData] = React.useState(null); // Stores the fetched word data (root, synonyms, etc.)
-                        const [loading, setLoading] = React.useState(false); // Indicates if data is currently being fetched
-                        const [error, setError] = React.useState(''); // Stores any error messages
-                        const [userId, setUserId] = React.useState(null); // Stores the authenticated user's ID
-                        const [db, setDb] = React.useState(null); // Stores the Firestore database instance
-                        const [auth, setAuth] = React.useState(null); // Stores the Firebase Auth instance
-                        // Removed showModal state as the modal is no longer used
-
-                        // useEffect hook for Firebase initialization and authentication
-                        // This runs once when the component mounts
-                        React.useEffect(() => {
-                            const initFirebase = async () => {
-                                try {
-                                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                                    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-
-                                    if (Object.keys(firebaseConfig).length === 0) {
-                                        console.error("Firebase config is not provided. Please ensure __firebase_config is set in the environment.");
-                                        setError("Firebase is not configured. Please contact support or check your environment setup.");
-                                        return;
-                                    }
-
-                                    const app = initializeApp(firebaseConfig);
-                                    const firestoreDb = getFirestore(app);
-                                    const firebaseAuth = getAuth(app); // Get the auth instance
-
-                                    setDb(firestoreDb);
-                                    setAuth(firebaseAuth);
-
-                                    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-                                    // Use the signInAnonymously and signInWithCustomToken from the firebaseAuth instance directly
-                                    if (initialAuthToken) {
-                                        await firebaseAuth.signInWithCustomToken(initialAuthToken);
-                                    } else {
-                                        await firebaseAuth.signInAnonymously();
-                                    }
-
-                                    // Set up an authentication state change listener to get the user ID
-                                    firebaseAuth.onAuthStateChanged((user) => {
-                                        if (user) {
-                                            setUserId(user.uid);
-                                        } else {
-                                            // If the user somehow logs out, try to sign in anonymously again
-                                            firebaseAuth.signInAnonymously().then(anonUser => setUserId(anonUser.user.uid));
-                                        }
-                                    });
-                                } catch (e) {
-                                    // Catch and display any errors during Firebase initialization
-                                    console.error("Error initializing Firebase:", e);
-                                    setError("Failed to initialize the application. Please try again.");
-                                }
-                            };
-
-                            initFirebase(); // Call the Firebase initialization function
-                        }, []); // Empty dependency array means this effect runs only once on mount
-
-                        // Function to handle the actual data fetching from Gemini API
-                        const fetchArabicWordData = React.useCallback(async () => {
-                             if (!arabicWord.trim()) {
-                                setError('Please enter an Arabic word.');
-                                setWordData(null);
-                                return;
-                            }
-
-                            setLoading(true);
-                            setError('');
-                            setWordData(null);
-                            // Removed setShowModal(false) as modal is gone
-
-                            try {
-                                const prompt = `For the Arabic word '${arabicWord.trim()}', provide its root word and its English translation, a list of up to 5 synonyms with their English translations (if they are close enough in meaning), a list of up to 3 antonyms with their English translations (if they are opposite enough in meaning), three distinct example sentences using the word, each with its English translation.
-                                Additionally, provide up to 3 common derived forms or verb conjugations of the word with their English translations, and a brief paragraph (1-3 sentences) on its cultural context or specific usage nuances.
-                                Ensure the output is a JSON object with keys: \`root_word\` (string), \`root_word_english\` (string), \`synonyms\` (array of objects with 'arabic' and 'english' keys), \`antonyms\` (array of objects with 'arabic' and 'english' keys), \`example_sentences\` (array of objects with 'arabic' and 'english' keys), \`derivations\` (array of objects with 'arabic' and 'english' keys), and \`cultural_notes\` (string).
-                                If no synonyms, antonyms, or derivations are found, provide an empty array for that field. If no specific cultural notes are relevant, provide an empty string.`;
-
-                                // const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
-
-                                // const payload = {
-                                //     contents: chatHistory,
-                                //     generationConfig: {
-                                //         responseMimeType: "application/json",
-                                //         responseSchema: {
-                                //             type: "OBJECT",
-                                //             properties: {
-                                //                 root_word: { "type": "STRING" },
-                                //                 root_word_english: { "type": "STRING" },
-                                //                 synonyms: {
-                                //                     "type": "ARRAY",
-                                //                     "items": {
-                                //                         "type": "OBJECT",
-                                //                         "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
-                                //                         "required": ["arabic", "english"]
-                                //                     }
-                                //                 },
-                                //                 antonyms: {
-                                //                     "type": "ARRAY",
-                                //                     "items": {
-                                //                         "type": "OBJECT",
-                                //                         "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
-                                //                         "required": ["arabic", "english"]
-                                //                     }
-                                //                 },
-                                //                 example_sentences: {
-                                //                     "type": "ARRAY",
-                                //                     "items": {
-                                //                         "type": "OBJECT",
-                                //                         "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
-                                //                         "required": ["arabic", "english"]
-                                //                     }
-                                //                 },
-                                //                 derivations: {
-                                //                     "type": "ARRAY",
-                                //                     "items": {
-                                //                         "type": "OBJECT",
-                                //                         "properties": { "arabic": { "type": "STRING" }, "english": { "type": "STRING" } },
-                                //                         "required": ["arabic", "english"]
-                                //                     }
-                                //                 },
-                                //                 cultural_notes: { "type": "STRING" }
-                                //             },
-                                //             required: ["root_word", "root_word_english", "synonyms", "antonyms", "example_sentences", "derivations", "cultural_notes"]
-                                //         }
-                                //     }
-                                // };
-
-                                // const apiKey = "AIzaSyDgKgG3__XCgA9d1tkaIa-oM1aCPT_eShE"; // Canvas will provide at runtime
-                                // const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                                    const fetchArabicWordData = React.useCallback(async () => {
-                                    if (!arabicWord.trim()) {
-                                        setError('Please enter an Arabic word.');
-                                        setWordData(null);
-                                        return;
-                                    }
-                                
-                                    setLoading(true);
-                                    setError('');
-                                    setWordData(null);
-                                
-                                    // This is the prompt. Keep this part as it's correctly formatted.
-                                    const prompt = `For the Arabic word '${arabicWord.trim()}', provide its root word and its English translation, a list of up to 5 synonyms with their English translations (if they are close enough in meaning), a list of up to 3 antonyms with their English translations (if they are opposite enough in meaning), three distinct example sentences using the word, each with its English translation.
-                                    Additionally, provide up to 3 common derived forms or verb conjugations of the word with their English translations, and a brief paragraph (1-3 sentences) on its cultural context or specific usage nuances.
-                                    Ensure the output is a JSON object with keys: \`root_word\` (string), \`root_word_english\` (string), \`synonyms\` (array of objects with 'arabic' and 'english' keys), \`antonyms\` (array of objects with 'arabic' and 'english' keys), \`example_sentences\` (array of objects with 'arabic' and 'english' keys), \`derivations\` (array of objects with 'arabic' and 'english' keys), and \`cultural_notes\` (string).
-                                    If no synonyms, antonyms, or derivations are found, provide an empty array for that field. If no specific cultural notes are relevant, provide an empty string.`;
-                                
-                                    // ------------------------------------------------------------------
-                                    // THIS IS THE PART YOU NEED TO REPLACE
-                                    // ------------------------------------------------------------------
-                                    try {
-                                        // This is the new, secure fetch call to your backend
-                                        const yourBackendUrl = '/api/data';
-                                
-                                        const response = await fetch(yourBackendUrl, {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                            },
-                                            body: JSON.stringify({ prompt: prompt }),
-                                        });
-                                
-                                        if (!response.ok) {
-                                            const errorData = await response.json();
-                                            throw new Error(`Server error: ${errorData.error || response.statusText}`);
-                                        }
-                                
-                                        const parsedData = await response.json();
-                                        setWordData(parsedData);
-                                        
-                                    } catch (e) {
-                                        console.error("Error fetching data:", e);
-                                        setError(`Failed to fetch data: ${e.message}. Please try a different word or try again later.`);
-                                    } finally {
-                                        setLoading(false);
-                                    }
-                                }, [arabicWord]);
-                        //         const response = await fetch(apiUrl, {
-                        //             method: 'POST',
-                        //             headers: { 'Content-Type': 'application/json' },
-                        //             body: JSON.stringify(payload)
-                        //         });
-
-                        //         if (!response.ok) {
-                        //             const errorData = await response.json();
-                        //             throw new Error(`API error: ${errorData.error?.message || response.statusText}`);
-                        //         }
-
-                        //         const result = await response.json();
-
-                        //         if (result.candidates && result.candidates.length > 0 &&
-                        //             result.candidates[0].content && result.candidates[0].content.parts &&
-                        //             result.candidates[0].content.parts.length > 0) {
-                        //             const jsonString = result.candidates[0].content.parts[0].text;
-                        //             const parsedData = JSON.parse(jsonString);
-
-                        //             if (parsedData.root_word !== undefined &&
-                        //                 parsedData.root_word_english !== undefined &&
-                        //                 Array.isArray(parsedData.synonyms) &&
-                        //                 Array.isArray(parsedData.antonyms) &&
-                        //                 Array.isArray(parsedData.example_sentences) &&
-                        //                 Array.isArray(parsedData.derivations) &&
-                        //                 typeof parsedData.cultural_notes === 'string') {
-                        //                 setWordData(parsedData);
-                        //             } else {
-                        //                 throw new Error("Unexpected data structure from API. Response might be incomplete or malformed.");
-                        //             }
-                        //         } else {
-                        //             throw new Error("No content received from the API. The model might not have generated a response.");
-                        //         }
-                        //     } catch (e) {
-                        //         console.error("Error fetching data:", e);
-                        //         setError(`Failed to fetch data: ${e.message}. Please try a different word or try again later.`);
-                        //     } finally {
-                        //         setLoading(false);
-                        //     }
-                        // }, [arabicWord]); // Re-run useCallback if arabicWord changes
-
-                        // Callback for handling Enter key press in the input field
-                        const handleKeyPress = React.useCallback((event) => {
-                            if (event.key === 'Enter') {
-                                fetchArabicWordData();
-                            }
-                        }, [fetchArabicWordData]); // Re-run useCallback if fetchArabicWordData changes
-
-                        return (
-                            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-8 font-sans flex flex-col items-center justify-center">
-                                <div className="bg-white rounded-xl shadow-2xl p-6 sm:p-10 w-full max-w-2xl transform transition-all duration-300 hover:scale-[1.01]">
-                                    {/* Application Title */}
-                                    <h1 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mb-6 font-inter">
-                                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                                            Arabic WordWeb
-                                        </span>
-                                    </h1>
-                                    {/* Application Description */}
-                                    <p className="text-center text-gray-600 mb-8 text-lg">
-                                        Enter an Arabic word to find its root, synonyms, antonyms, and example sentences.
-                                    </p>
-
-                                    {/* Input field and Search button */}
-                                    <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                                        <input
-                                            type="text"
-                                            className="flex-grow p-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg text-right"
-                                            placeholder="أدخل كلمة عربية هنا" // Placeholder text in Arabic
-                                            value={arabicWord}
-                                            onChange={(e) => setArabicWord(e.target.value)} // Update state on input change
-                                            onKeyPress={handleKeyPress} // Trigger search on Enter key press
-                                            dir="rtl" // Set text direction to right-to-left for Arabic
-                                        />
-                                        <button
-                                            onClick={fetchArabicWordData} // Trigger search on button click
-                                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-lg shadow-md hover:from-blue-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-all duration-200 text-lg font-semibold"
-                                            disabled={loading} // Disable button when loading
-                                        >
-                                            {loading ? (
-                                                // Loading spinner SVG
-                                                <svg className="animate-spin h-5 w-5 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                            ) : (
-                                                'بحث' // "Search" button text in Arabic
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    {error && (
-                                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
-                                            <strong className="font-bold">Error: </strong>
-                                            <span className="block sm:inline">{error}</span>
-                                        </div>
-                                    )}
-
-                                    {wordData && (
-                                        <div className="mt-8 space-y-6 text-gray-700">
-                                            {/* Original Word (if available from previous search) */}
-                                            {arabicWord && (
-                                                <div className="bg-blue-100 p-4 rounded-lg shadow-inner border border-blue-200">
-                                                    <h3 className="text-xl font-semibold text-blue-800 mb-2">الكلمة التي تم البحث عنها (Searched Word):</h3>
-                                                    <p className="text-lg font-medium text-right" dir="rtl">{arabicWord}</p>
-                                                </div>
-                                            )}
-
-                                            {/* Root Word section */}
-                                            {wordData.root_word && (
-                                                <div className="bg-blue-50 p-4 rounded-lg shadow-inner">
-                                                    <h3 className="text-xl font-semibold text-blue-800 mb-2">الكلمة الجذرية (Root Word):</h3>
-                                                    <p className="text-lg font-medium text-right" dir="rtl">{wordData.root_word}</p>
-                                                    <p className="text-md text-gray-600 text-right" dir="ltr">{wordData.root_word_english}</p>
-                                                </div>
-                                            )}
-
-                                            {wordData.synonyms && wordData.synonyms.length > 0 && (
-                                                <div className="bg-green-50 p-4 rounded-lg shadow-inner">
-                                                    <h3 className="text-xl font-semibold text-green-800 mb-2">المرادفات (Synonyms):</h3>
-                                                    <ul className="list-disc list-inside text-right space-y-1" dir="rtl">
-                                                        {wordData.synonyms.map((syn, index) => (
-                                                            <li key={`syn-${index}`} className="text-lg">
-                                                                {syn.arabic} <span dir="ltr">({syn.english})</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-
-                                            {wordData.antonyms && wordData.antonyms.length > 0 && (
-                                                <div className="bg-red-50 p-4 rounded-lg shadow-inner">
-                                                    <h3 className="text-xl font-semibold text-red-800 mb-2">المتضادات (Antonyms):</h3>
-                                                    <ul className="list-disc list-inside text-right space-y-1" dir="rtl">
-                                                        {wordData.antonyms.map((ant, index) => (
-                                                            <li key={`ant-${index}`} className="text-lg">
-                                                                {ant.arabic} <span dir="ltr">({ant.english})</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-
-                                            {wordData.example_sentences && wordData.example_sentences.length > 0 && (
-                                                <div className="bg-purple-50 p-4 rounded-lg shadow-inner">
-                                                    <h3 className="text-xl font-semibold text-purple-800 mb-2">جمل أمثلة (Example Sentences):</h3>
-                                                    <ul className="list-decimal list-inside text-right space-y-2" dir="rtl">
-                                                        {wordData.example_sentences.map((sentence, index) => (
-                                                            <li key={`ex-${index}`} className="text-lg">
-                                                                {sentence.arabic}
-                                                                <p className="text-md text-gray-600" dir="ltr">{sentence.english}</p>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-
-                                            {wordData.derivations && wordData.derivations.length > 0 && (
-                                                <div className="bg-yellow-50 p-4 rounded-lg shadow-inner">
-                                                    <h3 className="text-xl font-semibold text-yellow-800 mb-2">✨ تصريفات و مشتقات الكلمة (Word Derivations/Conjugations):</h3>
-                                                    <ul className="list-disc list-inside text-right space-y-1" dir="rtl">
-                                                        {wordData.derivations.map((derivation, index) => (
-                                                            <li key={`derivation-${index}`} className="text-lg">
-                                                                {derivation.arabic} <span dir="ltr">({derivation.english})</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-
-                                            {wordData.cultural_notes && (
-                                                <div className="bg-indigo-50 p-4 rounded-lg shadow-inner">
-                                                    <h3 className="text-xl font-semibold text-indigo-800 mb-2">✨ ملاحظات ثقافية واستخدامية (Cultural Context/Usage Notes):</h3>
-                                                    <p className="text-lg text-right" dir="rtl">{wordData.cultural_notes}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                                {/* Removed Floating Action Button and Modal for simpler direct input */}
-
-                                {userId && (
-                                    <p className="mt-4 text-sm text-gray-500">
-                                        User ID: {userId}
-                                    </p>
-                                )}
+        // Function to render the UI based on the current state
+        function render() {
+            if (state.error) {
+                appContainer.innerHTML = `
+                    <div class="card p-8 text-center text-red-500">
+                        <h2 class="text-2xl font-bold mb-4">Error</h2>
+                        <p class="text-md">${state.error}</p>
+                    </div>
+                `;
+            } else if (state.loading) {
+                appContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-64">
+                        <div class="loader"></div>
+                        <p class="mt-4 text-gray-600">Loading...</p>
+                    </div>
+                `;
+            } else {
+                appContainer.innerHTML = `
+                    <div class="card">
+                        <div class="flex flex-col items-center">
+                            <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-6">Arabic WordWeb</h1>
+                            <p class="text-center text-gray-600 mb-8">
+                                Enter an Arabic word below to find its root, translation, and more.
+                            </p>
+                            <div class="w-full relative">
+                                <input
+                                    id="arabic-input"
+                                    type="text"
+                                    placeholder="اكتب كلمة عربية..."
+                                    class="w-full px-5 py-3 border-2 border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-lg pr-12"
+                                    dir="rtl"
+                                    lang="ar"
+                                />
+                                <button id="search-button" class="absolute inset-y-0 left-0 flex items-center pl-3 pr-2 rounded-full">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </button>
                             </div>
-                        );
-                    };
+                        </div>
+                        <div id="results-container" class="mt-8">
+                            <!-- Results will be displayed here -->
+                            ${state.content ? formatResults(state.content) : ''}
+                        </div>
+                    </div>
+                `;
 
-                    // Standard React 18 client-side rendering boilerplate
-                    const container = document.getElementById('root');
-                    if (container) {
-                        const root = ReactDOM.createRoot(container);
-                        root.render(
-                            <React.StrictMode>
-                                <App />
-                            </React.StrictMode>
-                        );
+                // Add event listener to the search button and input field
+                const searchButton = document.getElementById('search-button');
+                const arabicInput = document.getElementById('arabic-input');
+                searchButton.addEventListener('click', handleSearch);
+                arabicInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        handleSearch();
                     }
-                } else {
-                    // If not all libraries are loaded and max retries not reached, log a warning and retry
-                    console.warn(`Libraries not fully loaded yet (attempt ${retryCount + 1}/${maxRetries}):`);
-                    if (!isReactLoaded) console.warn("  - React (window.React) is undefined.");
-                    if (!isReactDOMLoaded) console.warn("  - ReactDOM (window.ReactDOM) is undefined.");
-                    if (!isFirebaseAppLoaded) console.warn("  - Firebase App (window.firebase) is undefined.");
-                    if (!isFirebaseAuthLoaded) console.warn("  - Firebase Auth (window.firebase.auth) is undefined.");
-                    if (!isFirestoreLoaded) console.warn("  - Firebase Firestore (window.firebase.firestore) is undefined.");
+                });
+            }
+        }
 
-                    if (retryCount < maxRetries) {
-                        retryCount++;
-                        setTimeout(checkAndRunApp, 50); // Keep checking until all are ready
-                    } else {
-                        // If max retries reached, display an error message on the page
-                        console.error("Failed to load necessary libraries after multiple attempts. Please check your internet connection or browser settings.");
-                        const rootElement = document.getElementById('root');
-                        if (rootElement) {
-                            rootElement.innerHTML = `
-                                <div class="min-h-screen bg-red-100 flex items-center justify-center p-4">
-                                    <div class="bg-white rounded-xl shadow-2xl p-8 text-center text-red-700 max-w-md">
-                                        <h2 class="text-2xl font-bold mb-4">Application Error</h2>
-                                        <p class="text-lg">
-                                            Failed to load essential components. This might be due to a network issue,
-                                            a temporary problem with our service providers (CDNs), or browser security settings.
-                                        </p>
-                                        <p class="text-md mt-4">
-                                            Please check your internet connection and try reloading the page.
-                                        </p>
-                                    </div>
-                                </div>
-                            `;
-                        }
+        // Function to format the JSON data into HTML
+        function formatResults(data) {
+            if (!data) return '';
+            const { root_word, root_word_english, synonyms, antonyms, example_sentences, derivations, cultural_notes } = data;
+
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-800">
+                    <div>
+                        <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Root Word</h3>
+                        <div class="text-lg">
+                            <p class="mb-1"><span class="font-semibold">Arabic:</span> ${root_word}</p>
+                            <p><span class="font-semibold">English:</span> ${root_word_english}</p>
+                        </div>
+                    </div>
+                    ${synonyms && synonyms.length > 0 ? `
+                    <div>
+                        <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Synonyms</h3>
+                        <ul class="list-disc list-inside">
+                            ${synonyms.map(s => `<li>${s.arabic} <span class="text-gray-500">(${s.english})</span></li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+                    ${antonyms && antonyms.length > 0 ? `
+                    <div>
+                        <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Antonyms</h3>
+                        <ul class="list-disc list-inside">
+                            ${antonyms.map(a => `<li>${a.arabic} <span class="text-gray-500">(${a.english})</span></li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+                </div>
+                ${example_sentences && example_sentences.length > 0 ? `
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Example Sentences</h3>
+                    <div class="space-y-4">
+                        ${example_sentences.map(e => `
+                            <div>
+                                <p class="text-lg font-medium text-right" dir="rtl">${e.arabic}</p>
+                                <p class="text-gray-600 pl-4">${e.english}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                ${derivations && derivations.length > 0 ? `
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Derived Forms</h3>
+                    <ul class="list-disc list-inside">
+                        ${derivations.map(d => `<li>${d.arabic} <span class="text-gray-500">(${d.english})</span></li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                ${cultural_notes ? `
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold border-b-2 border-blue-200 pb-2 mb-4">Cultural Notes</h3>
+                    <p class="text-gray-700 leading-relaxed">${cultural_notes}</p>
+                </div>
+                ` : ''}
+            `;
+        }
+
+        // Function to handle the search logic and API call
+        async function handleSearch() {
+            const arabicWord = document.getElementById('arabic-input').value;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+            if (!arabicWord) {
+                state.error = "Please enter an Arabic word to search.";
+                render();
+                return;
+            }
+
+            // Set loading state and clear previous content
+            state.loading = true;
+            state.initialLoad = false;
+            state.content = null;
+            state.error = null;
+            render();
+
+            try {
+                const prompt = `For the Arabic word '${arabicWord.trim()}', provide its root word and its English translation, a list of up to 5 synonyms with their English translations (if they are close enough in meaning), a list of up to 3 antonyms with their English translations (if they are opposite enough in meaning), three distinct example sentences using the word, each with its English translation.
+                Additionally, provide up to 3 common derived forms or verb conjugations of the word with their English translations, and a brief paragraph (1-3 sentences) on its cultural context or specific usage nuances.
+                Ensure the output is a JSON object with keys: \`root_word\` (string), \`root_word_english\` (string), \`synonyms\` (array of objects with 'arabic' and 'english' keys), \`antonyms\` (array of objects with 'arabic' and 'english' keys), \`example_sentences\` (array of objects with 'arabic' and 'english' keys), \`derivations\` (array of objects with 'arabic' and 'english' keys), and \`cultural_notes\` (string).`;
+                
+                const payload = {
+                    "contents": [{ "parts": [{ "text": prompt }] }],
+                    "generationConfig": {
+                        "responseMimeType": "application/json"
                     }
+                };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'API responded with an error.');
                 }
-            };
 
-            // Start the checking process when the window has loaded all its resources
-            checkAndRunApp();
-        }; // End of window.onload function
+                const geminiResponseData = await response.json();
+                const generatedContent = geminiResponseData.candidates[0].content.parts[0].text;
+                const data = JSON.parse(generatedContent);
 
-        // PWA: Register Service Worker (Removed due to potential CSP issues in some embedded environments)
-        // if ('serviceWorker' in navigator) {
-        //     window.addEventListener('load', () => {
-        //         navigator.serviceWorker.register('./service-worker.js')
-        //             .then(registration => {
-        //                 console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        //             })
-        //             .catch(err => {
-        //                 console.log('ServiceWorker registration failed: ', err);
-        //             });
-        //     });
-        // }
+                state.content = data;
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                state.error = `Could not get data. Please check the word and try again. Error: ${error.message}`;
+            } finally {
+                state.loading = false;
+                render();
+            }
+        }
+
+        // Initial render on page load
+        window.onload = function() {
+            render();
+        }
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
