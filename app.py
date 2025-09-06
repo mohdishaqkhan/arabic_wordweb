@@ -1,31 +1,38 @@
-import os
 import json
 import requests
-from flask import Flask, jsonify, request # Import 'request' object
-from dotenv import load_dotenv
-
-load_dotenv()
+from flask import Flask, jsonify, request, render_template
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route('/api/data', methods=['POST']) # Set the method to POST
+# ---- DIRECTLY SET YOUR GEMINI API KEY HERE ----
+GM_API_KEY = "AIzaSyDgKgG3__XCgA9d1tkaIa-oM1aCPT_eShE"  # <-- Replace with your actual Gemini API key
+
+@app.route('/')
+def serve_index():
+    """Serves the index.html file."""
+    return render_template('index.html')
+
+@app.route('/api/data', methods=['POST'])
 def get_data():
-    # Get the API key from the environment variable
-    gm_api_key = os.environ.get('GM_API_KEY')
-    if not gm_api_key:
-        return jsonify({"error": "API key not found."}), 500
+    """
+    Handles POST requests to the /api/data endpoint.
+    It takes a prompt from the frontend, sends it to the Gemini API,
+    and returns a JSON response.
+    """
+    if not GM_API_KEY or GM_API_KEY == "AIzaSyDgKgG3__XCgA9d1tkaIa-oM1aCPT_eShE":
+        return jsonify({"error": "Please set your Gemini API key in app.py."}), 500
 
-    # Ensure the request is a JSON POST request
     if not request.json:
         return jsonify({"error": "Request body must be JSON."}), 400
 
-    # Get the user prompt from the JSON body
     user_prompt = request.json.get('prompt')
     if not user_prompt:
         return jsonify({"error": "No 'prompt' field in the request body."}), 400
 
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gm_api_key}'
-    
+    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GM_API_KEY}'
+
     payload = {
         "contents": [
             {
@@ -34,32 +41,23 @@ def get_data():
                 ]
             }
         ],
-        # Add generationConfig for JSON output, as you had in your original JS
         "generationConfig": {
             "responseMimeType": "application/json"
         }
     }
-    
-    try:
-        # Make the request to the Gemini API
-        response = requests.post(url, json=payload)
-        response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
 
-        # Parse the JSON response from the Gemini API
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
         gemini_response_data = response.json()
-        
-        # Extract the text part of the response
+
         if 'candidates' in gemini_response_data and len(gemini_response_data['candidates']) > 0:
             generated_content = gemini_response_data['candidates'][0]['content']['parts'][0]['text']
-            
-            # The generated content is a stringified JSON, so parse it
             parsed_data = json.loads(generated_content)
-            
-            # Return the parsed data to the client
             return jsonify(parsed_data)
         else:
             return jsonify({"error": "Gemini API did not return a valid response."}), 500
-            
+
     except requests.exceptions.RequestException as e:
         print(f"Request to Gemini API failed: {e}")
         return jsonify({"error": "Failed to connect to the Gemini API."}), 500
@@ -68,5 +66,5 @@ def get_data():
         return jsonify({"error": "Invalid or malformed JSON response from Gemini API."}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    port = 5000
+    app.run(host='0.0.0.0', port=port, debug=True)
